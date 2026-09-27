@@ -24,8 +24,12 @@ formats:
 
 link:
   # Console commands run the FIRST time an account links (never again after unlink/relink).
-  # %player% = Minecraft name. Example: "crates key give %player% vote 1"
-  rewards: []
+  # %player% = Minecraft name. If the player is offline when they link, the reward
+  # waits and is given the next time they join.
+  rewards:
+    - "crate giveKey Vk %player% 1"
+  # Remind players who haven't linked yet, a few seconds after they join (at most once a day).
+  join-reminder: true
 
 messages:
   discord-offline: "<red>Discord linking is offline right now. Try again in a few minutes.</red>"
@@ -34,6 +38,8 @@ messages:
   link-code: "<green>Your Discord link code: <click:copy_to_clipboard:'%code%'><hover:show_text:'<gray>Click to copy</gray>'><yellow><bold>%code%</bold></yellow></hover></click></green><newline><gray>In Discord, type</gray> <white>/link code:%code%</white> <gray>within %minutes% minutes.</gray>"
   linked: "<green>✔ Linked to Discord as <white><discord></white>!</green>"
   unlinked: "<gray>Your account is no longer linked to Discord.</gray>"
+  link-reminder: "<aqua>🔗 Link your Discord with <click:run_command:'/link'><hover:show_text:'<gray>Click to get your link code</gray>'><white><u>/link</u></white></hover></click> to get your rank roles in Discord — and a free <yellow>Vote Key</yellow> the first time!</aqua>"
+  link-reward: "<green>🎁 Thanks for linking! Here's your <yellow>Vote Key</yellow>.</green>"
 
 console:
   # Send console output to the Discord channel chosen with /bridge console.
