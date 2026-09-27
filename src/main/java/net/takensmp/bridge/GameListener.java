@@ -83,6 +83,16 @@ public final class GameListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
         if (plugin.luckPerms() != null) plugin.luckPerms().sendGroups(p.getUniqueId()); // keep Discord roles fresh
+        // A few seconds after joining (so it isn't buried under join messages):
+        // hand over any link reward earned while offline, and ask the bot whether to show the /link reminder.
+        org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!p.isOnline()) return;
+            plugin.givePendingReward(p);
+            if (plugin.getConfig().getBoolean("link.join-reminder", true)) {
+                BridgeClient c = plugin.client();
+                if (c != null && c.isConnected()) send("link_check", p, null);
+            }
+        }, 100L);
         if (!on("joins") || hidden(p)) return;
         send("join", p, Map.of("first", !p.hasPlayedBefore()));
     }

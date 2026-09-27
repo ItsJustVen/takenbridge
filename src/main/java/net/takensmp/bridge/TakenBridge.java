@@ -141,6 +141,7 @@ public final class TakenBridge extends JavaPlugin implements BridgeClient.Handle
             case "link_code" -> showLinkCode(f);
             case "linked" -> onLinked(f);
             case "unlinked" -> onUnlinked(f);
+            case "link_reminder" -> tell(byUuid(f), getConfig().getString("messages.link-reminder"));
             case "console_cmd" -> runConsoleCommand(f);
             case "req_groups" -> {
                 if (luckPerms != null) {
@@ -258,11 +259,56 @@ public final class TakenBridge extends JavaPlugin implements BridgeClient.Handle
         if (Boolean.TRUE.equals(f.get("first"))) {
             String name = String.valueOf(f.getOrDefault("name", p != null ? p.getName() : ""));
             if (!name.matches("[A-Za-z0-9_.*]{1,32}")) return; // only real player names go into console commands
-            for (String cmd : getConfig().getStringList("link.rewards")) {
-                if (cmd == null || cmd.isBlank()) continue;
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", name));
-            }
+            if (p != null) giveLinkRewards(p);
+            else savePendingReward(String.valueOf(f.get("uuid")), name); // given on their next join
         }
+    }
+
+    // ------------------------------------------------------------------ link rewards
+
+    private File rewardsFile() {
+        return new File(getDataFolder(), "pending-rewards.yml");
+    }
+
+    private void savePendingReward(String uuid, String name) {
+        try { UUID.fromString(uuid); } catch (IllegalArgumentException e) { return; }
+        YamlConfiguration y = YamlConfiguration.loadConfiguration(rewardsFile());
+        y.set(uuid, name);
+        try {
+            y.save(rewardsFile());
+        } catch (IOException e) {
+            getLogger().log(Level.WARNING, "Could not save pending link reward for " + name, e);
+        }
+    }
+
+    /** Called on join: hand over a reward earned while offline. */
+    void givePendingReward(Player p) {
+        File file = rewardsFile();
+        if (!file.exists()) return;
+        YamlConfiguration y = YamlConfiguration.loadConfiguration(file);
+        String key = p.getUniqueId().toString();
+        if (!y.contains(key)) return;
+        y.set(key, null);
+        try {
+            y.save(file);
+        } catch (IOException e) {
+            getLogger().log(Level.WARNING, "Could not update pending-rewards.yml", e);
+            return; // don't risk giving it twice
+        }
+        giveLinkRewards(p);
+    }
+
+    private void giveLinkRewards(Player p) {
+        String name = p.getName();
+        if (!name.matches("[A-Za-z0-9_.*]{1,32}")) return;
+        boolean any = false;
+        for (String cmd : getConfig().getStringList("link.rewards")) {
+            if (cmd == null || cmd.isBlank()) continue;
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", name));
+            any = true;
+        }
+        if (any) tell(p, getConfig().getString("messages.link-reward"));
+        getLogger().info("Gave link reward to " + name);
     }
 
     private void onUnlinked(Map<String, Object> f) {
