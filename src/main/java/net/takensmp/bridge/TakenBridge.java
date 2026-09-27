@@ -21,6 +21,8 @@ import java.util.logging.Level;
 public final class TakenBridge extends JavaPlugin implements BridgeClient.Handler {
 
     private BridgeClient client;
+    private ConsoleForwarder console;
+    private LuckPermsSync luckPerms;
     private File pairingFile;
     private final MiniMessage miniMessage = MiniMessage.miniMessage();
 
@@ -51,6 +53,18 @@ public final class TakenBridge extends JavaPlugin implements BridgeClient.Handle
             }
         }
 
+        if (getConfig().getBoolean("console.enabled", true)) {
+            console = new ConsoleForwarder(this);
+            console.install();
+        }
+        if (getServer().getPluginManager().getPlugin("LuckPerms") != null) {
+            try {
+                luckPerms = new LuckPermsSync(this);
+            } catch (Throwable t) {
+                getLogger().warning("LuckPerms found but rank sync couldn't start: " + t);
+            }
+        }
+
         client.start();
         if (!client.isPaired()) {
             getLogger().warning("Not paired with Discord yet. Run /bridge pair in Discord, then: takenbridge pair <code>");
@@ -69,10 +83,13 @@ public final class TakenBridge extends JavaPlugin implements BridgeClient.Handle
         stopped.put("t", "status");
         stopped.put("state", "stop");
         client.send(stopped);
+        if (console != null) console.uninstall();
         client.stop(1_500); // give "server stopped" a moment to reach Discord
     }
 
     public BridgeClient client() { return client; }
+
+    public LuckPermsSync luckPerms() { return luckPerms; }
 
     // ------------------------------------------------------------------ BridgeClient.Handler
 
@@ -124,6 +141,15 @@ public final class TakenBridge extends JavaPlugin implements BridgeClient.Handle
             case "link_code" -> showLinkCode(f);
             case "linked" -> onLinked(f);
             case "unlinked" -> onUnlinked(f);
+            case "console_cmd" -> runConsoleCommand(f);
+            case "req_groups" -> {
+                if (luckPerms != null) {
+                    try { luckPerms.sendGroups(UUID.fromString(String.valueOf(f.get("uuid")))); } catch (IllegalArgumentException ignored) { }
+                }
+            }
+            case "set_groups" -> {
+                if (luckPerms != null) luckPerms.apply(f);
+            }
             default -> getLogger().fine("Unknown frame from Discord: " + t);
         }
     }
@@ -164,6 +190,27 @@ public final class TakenBridge extends JavaPlugin implements BridgeClient.Handle
             return;
         }
         Bukkit.getServer().broadcast(line);
+    }
+
+    // ------------------------------------------------------------------ console from Discord
+
+    private void runConsoleCommand(Map<String, Object> f) {
+        String cmd = String.valueOf(f.getOrDefault("cmd", "")).trim().replaceFirst("^/+", "");
+        String by = String.valueOf(f.getOrDefault("by", "Discord"));
+        if (cmd.isEmpty()) return;
+        String reason = null;
+        if (!getConfig().getBoolean("console.allow-commands", true)) reason = "running commands from Discord is turned off in TakenBridge's config";
+        else if (ConsoleForwarder.isBlocked(cmd, getConfig().getStringList("console.blocked-commands"))) reason = "blocked by TakenBridge's config";
+        if (reason != null) {
+            Map<String, Object> r = new LinkedHashMap<>();
+            r.put("t", "console_denied");
+            r.put("cmd", cmd);
+            r.put("reason", reason);
+            client.send(r);
+            return;
+        }
+        getLogger().info(by + " ran from Discord: " + cmd);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
     }
 
     // ------------------------------------------------------------------ linking

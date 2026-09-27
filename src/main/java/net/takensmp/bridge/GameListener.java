@@ -82,6 +82,7 @@ public final class GameListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
+        if (plugin.luckPerms() != null) plugin.luckPerms().sendGroups(p.getUniqueId()); // keep Discord roles fresh
         if (!on("joins") || hidden(p)) return;
         send("join", p, Map.of("first", !p.hasPlayedBefore()));
     }
