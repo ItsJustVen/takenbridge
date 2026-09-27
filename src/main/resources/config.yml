@@ -34,3 +34,34 @@ messages:
   link-code: "<green>Your Discord link code: <click:copy_to_clipboard:'%code%'><hover:show_text:'<gray>Click to copy</gray>'><yellow><bold>%code%</bold></yellow></hover></click></green><newline><gray>In Discord, type</gray> <white>/link code:%code%</white> <gray>within %minutes% minutes.</gray>"
   linked: "<green>✔ Linked to Discord as <white><discord></white>!</green>"
   unlinked: "<gray>Your account is no longer linked to Discord.</gray>"
+
+console:
+  # Send console output to the Discord channel chosen with /bridge console.
+  enabled: true
+  # Let Owner / Server Manager run commands by typing in that channel.
+  allow-commands: true
+  # Refused even if Discord sends them. "*" matches any one word.
+  blocked-commands:
+    - op
+    - deop
+    - stop
+    - restart
+    - reload
+    - rl
+    - execute
+    - sudo
+    - esudo
+    - whitelist off
+    - lp editor
+    - luckperms editor
+    - "lp user * permission set *"
+    - plugman
+    - pl unload
+    - plugins unload
+
+sync:
+  # LuckPerms groups that Discord roles are allowed to grant or remove.
+  # Anything not listed here is refused, even if the bot asks.
+  discord-can-grant:
+    - helper
+    - mod
