@@ -1,0 +1,29 @@
+name: TakenBridge
+version: '${version}'
+main: net.takensmp.bridge.TakenBridge
+api-version: '1.21'
+description: Connects TakenSMP to the TakenSMP Utilities Discord bot (chat bridge, linking, role sync).
+authors: [TakenSMP]
+website: https://discord.com
+softdepend: [floodgate, Essentials, LuckPerms]
+commands:
+  takenbridge:
+    description: Manage the Discord bridge
+    usage: /takenbridge <pair|status|unpair>
+    permission: takenbridge.admin
+  link:
+    description: Link your Minecraft account to Discord
+    usage: /link
+    aliases: [discordlink]
+    permission: takenbridge.link
+  unlink:
+    description: Unlink your Minecraft account from Discord
+    usage: /unlink
+    permission: takenbridge.link
+permissions:
+  takenbridge.link:
+    description: Use /link and /unlink
+    default: true
+  takenbridge.admin:
+    description: Pair and manage the Discord bridge
+    default: op

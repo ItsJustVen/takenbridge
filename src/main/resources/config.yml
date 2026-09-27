@@ -1,0 +1,36 @@
+# TakenBridge — connects this Minecraft server to the TakenSMP Utilities Discord bot.
+# Pairing: run /bridge pair in Discord, then in this console: takenbridge pair <code>
+
+bot:
+  # Where the Discord bot listens (the RealisticNode bot server's address and port).
+  host: 216.173.77.67
+  port: 7006
+
+relay:
+  chat: true
+  joins: true
+  deaths: true
+  advancements: true
+  # Don't announce joins/quits/deaths of vanished staff.
+  hide-vanished: true
+
+formats:
+  # How Discord messages look in game (MiniMessage). Placeholders:
+  #   <rolecolor>...</rolecolor> = the sender's top Discord role color
+  #   <name> = Discord display name, <message> = the text, <reply> = "(↩ Name) " when replying
+  discord-to-game: "<#5865F2>[Discord]</#5865F2> <rolecolor><name></rolecolor><gray>:</gray> <gray><reply></gray><white><message></white>"
+  # Messages from the bot itself, e.g. the helper answering "!ask" questions.
+  bot-to-game: "<gold>[<name>]</gold> <yellow><message></yellow>"
+
+link:
+  # Console commands run the FIRST time an account links (never again after unlink/relink).
+  # %player% = Minecraft name. Example: "crates key give %player% vote 1"
+  rewards: []
+
+messages:
+  discord-offline: "<red>Discord linking is offline right now. Try again in a few minutes.</red>"
+  link-requested: "<gray>Getting your link code…</gray>"
+  # %code% and %minutes% are filled in. Click-to-copy works on Java; Bedrock players just read it.
+  link-code: "<green>Your Discord link code: <click:copy_to_clipboard:'%code%'><hover:show_text:'<gray>Click to copy</gray>'><yellow><bold>%code%</bold></yellow></hover></click></green><newline><gray>In Discord, type</gray> <white>/link code:%code%</white> <gray>within %minutes% minutes.</gray>"
+  linked: "<green>✔ Linked to Discord as <white><discord></white>!</green>"
+  unlinked: "<gray>Your account is no longer linked to Discord.</gray>"
